@@ -48,15 +48,16 @@ class MainActivity : AppCompatActivity() {
         val buttondot : Button = findViewById(R.id.buttondot)
 
         //operations
-        var buttonadd: Button = findViewById(R.id.buttonadd)
-        var buttonminus: Button = findViewById(R.id.buttonminus)
-        var buttondivide: Button = findViewById(R.id.buttondivide)
-        var buttonmultiply: Button = findViewById(R.id.buttonmultiply)
-        var buttonequals: Button = findViewById(R.id.buttonequals)
+        val buttonadd: Button = findViewById(R.id.buttonadd)
+        val buttonminus: Button = findViewById(R.id.buttonminus)
+        val buttondivide: Button = findViewById(R.id.buttondivide)
+        val buttonmultiply: Button = findViewById(R.id.buttonmultiply)
+        val buttonequals: Button = findViewById(R.id.buttonequals)
+        val negate: Button = findViewById(R.id.neg)
 
 //        var g = newNumber.text
 
-        var listener = View.OnClickListener { v ->
+        val listener = View.OnClickListener { v ->
             val tap = v as Button
             newNumber.append(tap.text)
         }
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
                 newNumber.append(buttondot.text)
             }
         }
+
         //into newnumber
         button0.setOnClickListener(listener)
         button1.setOnClickListener(listener)
@@ -97,6 +99,22 @@ class MainActivity : AppCompatActivity() {
         button8.setOnClickListener(listener)
         button9.setOnClickListener(listener)
         buttondot.setOnClickListener(function)
+        negate.setOnClickListener {v ->
+            var a = (v as Button).text
+            val value =  newNumber.text.toString()
+            if (value.isEmpty()){
+                newNumber.append("-")
+            }else{
+                try {
+                    var doubleValue = value.toDouble()
+                    doubleValue *= -1
+                    newNumber.setText(doubleValue.toString())
+                }catch (e:NumberFormatException){
+                        newNumber.setText("")
+                    }
+
+            }
+        }
 
         fun performoperation(value:String,operation:String){
 
@@ -156,10 +174,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        if (savedInstanceState.getBoolean(STATE_STORED_OPERAND,false)) {
-            operand1 = savedInstanceState.getDouble(STATE_OPERAND1)
+        operand1 = if (savedInstanceState.getBoolean(STATE_STORED_OPERAND,false)) {
+            savedInstanceState.getDouble(STATE_OPERAND1)
         }else{
-            operand1 = null
+            null
         }
        pendingOperation = savedInstanceState.getString(STATE_DISPLAY).toString()
         displayOperations.text = pendingOperation
