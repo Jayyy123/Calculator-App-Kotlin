@@ -7,20 +7,24 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.text.isDigitsOnly
-
+import java.lang.NumberFormatException
+//import kotlin.android.synthetic.main.activity_main.*
 //private const val TAG = "MainActivity"
 //private const val TEXT_CONTENTS = "TEXTCONTENTS"
+private const val STATE_OPERAND1 = "operand1"
+private const val STATE_STORED_OPERAND = "saved operand"
+private const val STATE_DISPLAY = "Operation"
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var result: EditText
     private lateinit var newNumber: EditText
     private val displayOperations by lazy(LazyThreadSafetyMode.NONE) { findViewById<TextView>(R.id.operation) }
-//    private var button1 : Button? = null
+    private var button1 : Button? = null
 
     //operands
 
     private var operand1: Double? = null
-    private var operand2: Double = 0.0
     private var pendingOperation = "="
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,20 +103,19 @@ class MainActivity : AppCompatActivity() {
             if (operand1 == null){
                 operand1 = value.toDouble()
             }
-            else{
-                operand2 = value.toDouble()
-            }
-                if (pendingOperation == "="){
+            else {
+                if (pendingOperation == "=") {
                     pendingOperation = operation
                 }
-                when (pendingOperation){
-                    "=" -> operand1 = operand2
-                    "/" -> operand1= operand1!! /operand2
-                    "-" -> operand1= operand1!!-operand2
-                    "+" -> operand1= operand1!!+operand2
-                    "x" -> operand1= operand1!!*operand2
-                    else ->operand1 = operand2
+                operand1 = when (pendingOperation) {
+                    "=" -> value.toDouble()
+                    "/" -> operand1!! / value.toDouble()
+                    "-" -> operand1!! - value.toDouble()
+                    "+" -> operand1!! + value.toDouble()
+                    "x" -> operand1!! * value.toDouble()
+                    else -> value.toDouble()
                 }
+            }
 
             result.setText(operand1.toString())
             newNumber.text.clear()
@@ -120,11 +123,13 @@ class MainActivity : AppCompatActivity() {
 
 
         //into textview
-        var op = View.OnClickListener { b ->
-            var press = (b as Button).text.toString()
-            var value = newNumber.text.toString()
-            if (value.isNotEmpty()){
+        val op = View.OnClickListener { b ->
+            val press = (b as Button).text.toString()
+            try {
+                val value = newNumber.text.toString()
                 performoperation(value, press)
+            }catch (e:NumberFormatException){
+                newNumber.setText("")
             }
             pendingOperation = press
             displayOperations.text = pendingOperation
@@ -140,5 +145,24 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (operand1 != null){
+            outState.putDouble(STATE_OPERAND1,operand1!!)
+            outState.putBoolean(STATE_STORED_OPERAND,true)
+        }
+        outState.putString(STATE_DISPLAY,pendingOperation)
+    }
 
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        if (savedInstanceState.getBoolean(STATE_STORED_OPERAND,false)) {
+            operand1 = savedInstanceState.getDouble(STATE_OPERAND1)
+        }else{
+            operand1 = null
+        }
+       pendingOperation = savedInstanceState.getString(STATE_DISPLAY).toString()
+        displayOperations.text = pendingOperation
+
+    }
 }
